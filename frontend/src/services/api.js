@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://feedback-frontend-skur.onrender.com",
+  baseURL: "https://feedback-backend-786o.onrender.com",
 });
 
 API.interceptors.request.use((config) => {
