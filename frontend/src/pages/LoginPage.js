@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import API from "../services/api";
+import { Link } from "react-router-dom";
 
 const LoginPage = () => {
   const [form, setForm] = useState({ login_field: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [selectedRole, setSelectedRole] = useState(""); 
+  const [selectedRole, setSelectedRole] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -24,32 +25,41 @@ const LoginPage = () => {
   };
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  setError("");
+    e.preventDefault();
+    setError("");
 
-  const loginField = form.login_field;
-  const payload = loginField.includes("@")
-    ? { email: loginField, password: form.password }
-    : { username: loginField, password: form.password };
+    const loginField = form.login_field;
+    const payload = loginField.includes("@")
+      ? { email: loginField, password: form.password }
+      : { username: loginField, password: form.password };
 
-  try {
-    const response = await API.post("/login", payload);
-    const token = response.data.access_token;
-    const decodedToken = JSON.parse(atob(token.split(".")[1]));
-    const role = decodedToken.role;
+    try {
+      const response = await API.post("/login", payload);
+      const token = response.data.access_token;
+      if (!token) {
+        setError("No token received. Please check your credentials.");
+        return;
+      }
+      const decodedToken = JSON.parse(atob(token.split(".")[1]));
+      const role = decodedToken.role;
 
-    localStorage.setItem("token", token);
-    localStorage.setItem("role", role);
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
 
-    if (role === "manager") navigate("/manager");
-    else if (role === "employee") navigate("/employee");
-  } catch (err) {
-    setError("Invalid credentials. Please try again.");
-    console.error("Login error:", err);
-  }
-};
+      if (role === "manager") navigate("/manager");
+      else if (role === "employee") navigate("/employee");
+    }
+    catch (err) {
+      console.error("Login error:", err);
+      if (err.response?.status === 401 || err.response?.status === 422) {
+        setError("Invalid username/email or password.");
+      } else {
+        setError("Server error. Please try again later.");
+      }
+    }
+  };
 
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-arctic px-4">
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
@@ -110,8 +120,14 @@ const LoginPage = () => {
 
         <p className="text-center text-sm text-gray-600 mt-4">
           Don't have an account?{" "}
-          <a href="/signup" className="text-primary hover:underline">Sign up</a>
+          <Link
+            to={`/signup?role=${selectedRole}`}
+            className="text-primary hover:underline"
+          >
+            Sign up
+          </Link>
         </p>
+
       </div>
     </div>
   );
