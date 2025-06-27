@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: "https://feedback-frontend-skur.onrender.com",
 });
 
 API.interceptors.request.use((config) => {
